@@ -1,5 +1,5 @@
 
-
+#include "secrets/garage_water_text_s3cr3ts.h"
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -8,6 +8,17 @@
 #define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
 #define uS_TO_M_FACTOR 60      /* Convert from seconds to minutes */
 #define TIME_TO_SLEEP 5
+
+char ssid[] = SECRET_SSID;
+char pass[] = SECRET_PASS;
+
+char from_number[] = SECRET_TWILIO_NUMBER;
+char my_number[] = SECRET_MY_NUMBER;
+
+char twilio_bearer_token[] = SECRET_TWILIO_TOKEN;
+char twilio_account_sid[] = TWILIO_ACCOUNT_SID;
+
+int threshold = 1000;
 
 SSD1306 display(0x3c, 5, 4);
 
@@ -28,19 +39,19 @@ bool checkForWater(int threshold)
 void connectToWifi()
 {
     Serial.println("trying to connect");
-    WiFi.begin("Name of the Windgrove", "shady lane");
+    WiFi.begin(ssid, pass);
 }
 
 void sendTextMessage(String message, String toNumber, String fromNumber)
 {
     HTTPClient http;
-    String accountSid = "ACe3812b31bd9b6e4f0110b8c8cd2de51d";
+    String accountSid = twilio_account_sid;
 
     String url = "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages";
 
     http.begin(url);
 
-    http.addHeader("Authorization", "Basic QUNlMzgxMmIzMWJkOWI2ZTRmMDExMGI4YzhjZDJkZTUxZDo2NzE5Mzk4NTYzZGYzYjFiZWE4MjVjOGFjYmRjY2MxNQ==");
+    http.addHeader("Authorization", twilio_bearer_token);
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
     int httpResponseCode = http.POST("From=" + fromNumber + "&To=" + toNumber + "&Body=" + message);
@@ -73,9 +84,9 @@ void setup()
 
 void loop()
 {
-    String toNumber = "+12566981624";
-    String fromNumber = "+12564698919";
-    bool isWaterPresent = checkForWater(2500);
+    String toNumber = my_number;
+    String fromNumber = from_number;
+    bool isWaterPresent = checkForWater(threshold);
     Serial.println("ARE WE CONNECTED:");
     Serial.println(WiFi.status());
     if (isWaterPresent)
