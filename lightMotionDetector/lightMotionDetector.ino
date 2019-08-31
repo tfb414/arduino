@@ -5,7 +5,7 @@
 #include "secrets/motion_sensor_s3cr3ts.h"
 
 const int sensePin = 36;
-const int motionDetectedLedPin = 21;
+const int motionDetectedLedPin = 26;
 const int activeLedPin = 33;
 const int pResistorPin = 32;
 
