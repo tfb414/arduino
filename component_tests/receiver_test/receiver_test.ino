@@ -17,10 +17,13 @@ Servo myservo;
 RF24 radio(2, 3); // CE, CSN
 const byte address[6] = "00001";
 
-myservo.attach(6);
+
 
 void setup() {
   Serial.begin(9600);
+
+  myservo.attach(6);
+  
   radio.begin();
   radio.openReadingPipe(0, address);
   radio.setPALevel(RF24_PA_MIN);
@@ -28,14 +31,22 @@ void setup() {
 }
 void loop() {
   if (radio.available()) {
-    char text[32] = "";
-    radio.read(&text, sizeof(text));
-    Serial.println(text);
-    if (text == "right") {
-      myservo.write(150);
+    int command;
+    radio.read(&command, sizeof(command));
+    if (command == 0) {
+      Serial.println("serial == 0");
     }
-    if (text == "left") {
-      myservo.write(30);
+
+    if (command == 1) {
+      Serial.println("Command == 1");
     }
+//    Serial.println(command == 2);
+//    Serial.print("2");
+//    if (command == 1) {
+//      myservo.write(150);
+//    }
+//    if (command == 0) {
+//      myservo.write(30);
+//    }
   }
 }
