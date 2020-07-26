@@ -29,7 +29,7 @@ void toggleOnLight()
 {
   Serial.println("toggleOnLight");
   HTTPClient http;
-  String url = "http://192.168.1.69:3000/motionSensorActivated";
+  String url = "http://192.168.1.69:3000/status";
 
   http.begin(url);
   http.addHeader("x-ha-access", homeAssistantId);
@@ -63,6 +63,7 @@ void setup()
         delay(3000);
       }
      Serial.println("connected");
+   toggleOnLight();
 }
  
 void loop(){
