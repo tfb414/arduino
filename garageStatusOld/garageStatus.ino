@@ -15,11 +15,11 @@
   bool lastGarageDoorStatus;
   bool lastLightStatus;
 
-  char ssid[] = "Spruce Wayne";
-  char pass[] = "shady lane";
+  char ssid[] = "IMPORT ENV";
+  char pass[] = "IMPORT ENV";
 
-  char twilio_bearer_token[] = "Basic QUNlMzgxMmIzMWJkOWI2ZTRmMDExMGI4YzhjZDJkZTUxZDo2NzE5Mzk4NTYzZGYzYjFiZWE4MjVjOGFjYmRjY2MxNQ==";
-  char twilio_account_sid[] = "ACe3812b31bd9b6e4f0110b8c8cd2de51d";
+  char twilio_bearer_token[] = "IMPORT ENV"
+  char twilio_account_sid[] = "IMPORT ENV";
 
   char twilio_number[] = "+12562425358";
   char my_number[] = "+12566981624";
