@@ -7,8 +7,19 @@
 const int garageDoorPin = 21;
 const int lightSensorPin = 34;
 
+int one_minute = 800;
+
+int minute_threshold_to_alert = 1;
+int threshold_to_alert = one_minute * 5;
+
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
+
+char twilio_bearer_token[] = TWILIO_BEARER_TOKEN;
+char twilio_account_sid[] = TWILIO_ACCOUNT_SID;
+
+char twilio_number[] = TWILIO_NUMBER;
+char my_number[] = MY_NUMBER;
 
 const size_t capacity = JSON_OBJECT_SIZE(2) + 65;
 DynamicJsonDocument homeStatus(capacity);
@@ -20,6 +31,29 @@ void connectToWifi()
 {
   Serial.println("trying to connect");
   WiFi.begin(ssid, pass);
+}
+
+void sendTextMessage(String message, String toNumber, String fromNumber)
+{
+    HTTPClient http;
+    String accountSid = twilio_account_sid;
+
+    String url = "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages";
+
+    http.begin(url);
+
+    http.addHeader("Authorization", twilio_bearer_token);
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    int httpResponseCode = http.POST("From=" + fromNumber + "&To=" + toNumber + "&Body=" + message);
+
+    if (httpResponseCode > 0)
+    {
+        String response = http.getString();
+        Serial.println(httpResponseCode);
+        Serial.println(response);
+    }
+    http.end();
 }
 
 String BoolToString(bool b)
@@ -48,7 +82,7 @@ void updateGarageStatus(bool garageDoorClosedParam, bool garageLightOffParam)
     String response = http.getString();
     Serial.print("Response code: ");
     Serial.println(httpResponseCode);
-    Serial.print("REsponse: ");
+    Serial.print("Response: ");
     Serial.println(response);
     
     DeserializationError error = deserializeJson(responseJson, response);
@@ -83,7 +117,7 @@ void getGarageStatus()
     String response = http.getString();
     Serial.print("Response code: ");
     Serial.println(httpResponseCode);
-    Serial.print("REsponse: ");
+    Serial.print("Response: ");
     Serial.println(response);
 
     DeserializationError error = deserializeJson(responseJson, response);
@@ -113,13 +147,6 @@ void setup()
   Serial.println("connected");
 
   getGarageStatus();
-    
-//  garageDoorClosed = homeStatus["garageDoorClosed"];
-//  garageLightOff = homeStatus["garageLightOff"];
-  Serial.print("garageDoorClosed: ");
-  Serial.println(garageDoorClosed);
-  Serial.print("garageLightOff: ");
-  Serial.println(garageLightOff);
   
 }
  
@@ -133,5 +160,22 @@ void loop(){
   if (newGarageDoorClosed != homeStatus["garageDoorClosed"] || newGarageLightOff != homeStatus["garageLightOff"]) {
     updateGarageStatus(newGarageDoorClosed, newGarageLightOff);
     getGarageStatus();
+  }
+
+  if(newGarageDoorClosed == false) {
+    threshold_to_alert = threshold_to_alert - 1;
+    Serial.print("threshold countdown:     ");
+    Serial.println(threshold_to_alert);
+  }
+  else {
+    threshold_to_alert = one_minute * 10;
+    Serial.print("Threshold has been reset:      ");
+    Serial.println(threshold_to_alert);  
+  }
+
+  if(threshold_to_alert <= 0) {
+    threshold_to_alert = one_minute * 30;
+    String message = "Garage door is open";
+    sendTextMessage(message, my_number, twilio_number);
   }
 }
