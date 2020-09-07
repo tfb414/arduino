@@ -22,8 +22,16 @@ void connectToWifi()
   WiFi.begin(ssid, pass);
 }
 
-void updateGarageStatus(String garageDoorClosedParam, String garageLightOffParam)
+String BoolToString(bool b)
 {
+  return b ? "true" : "false";
+}
+
+void updateGarageStatus(bool garageDoorClosedParam, bool garageLightOffParam)
+{
+  String garageDoorParam = BoolToString(garageDoorClosedParam);
+  String garageLightParam = BoolToString(garageLightOffParam);
+  
   DynamicJsonDocument responseJson(capacity);
   Serial.println("updateGarageStatus");
   HTTPClient http;
@@ -32,7 +40,7 @@ void updateGarageStatus(String garageDoorClosedParam, String garageLightOffParam
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  int httpResponseCode = http.POST("garageDoorClosed=" + garageDoorClosedParam + "&garageLightOff=" + garageLightOffParam);
+  int httpResponseCode = http.POST("garageDoorClosed=" + garageDoorParam + "&garageLightOff=" + garageLightParam);
   Serial.println(httpResponseCode);
 
   if (httpResponseCode > 0)
@@ -44,9 +52,13 @@ void updateGarageStatus(String garageDoorClosedParam, String garageLightOffParam
     Serial.println(response);
     
     DeserializationError error = deserializeJson(responseJson, response);
+    if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.c_str());
+    return;
+    }
     homeStatus = responseJson;
-    garageDoorClosed = homeStatus["garageDoorClosed"];
-    garageLightOff = homeStatus["garageLightOff"];
+
   }
   http.end();
 
@@ -82,14 +94,6 @@ void getGarageStatus()
   }
     
     homeStatus = responseJson;
-//    const bool garageDoorClosed = homeStatus["garageDoorClosed"];
-//    const bool garageLightOff = homeStatus["garageLightOff"];
-//
-//    Serial.print(garageDoorClosed);
-//    Serial.println("HEY OVER HERE");
-//    Serial.println(garageLightOff);
-//    Serial.println("did that work?");
-
   }
   http.end();
 
@@ -110,8 +114,8 @@ void setup()
 
   getGarageStatus();
     
-  garageDoorClosed = homeStatus["garageDoorClosed"];
-  garageLightOff = homeStatus["garageLightOff"];
+//  garageDoorClosed = homeStatus["garageDoorClosed"];
+//  garageLightOff = homeStatus["garageLightOff"];
   Serial.print("garageDoorClosed: ");
   Serial.println(garageDoorClosed);
   Serial.print("garageLightOff: ");
@@ -123,15 +127,11 @@ void loop(){
   int garageDoorSense = digitalRead(garageDoorPin);
   int lightSense = analogRead(lightSensorPin);
 
-  bool newGarageDoorClosed = garageDoorSense < 0; 
+  bool newGarageDoorClosed = garageDoorSense == 0; 
   bool newGarageLightOff = lightSense < 500;
-
  
   if (newGarageDoorClosed != homeStatus["garageDoorClosed"] || newGarageLightOff != homeStatus["garageLightOff"]) {
+    updateGarageStatus(newGarageDoorClosed, newGarageLightOff);
     getGarageStatus();
-
-    updateGarageStatus("true", "true");
-    getGarageStatus();
-    
   }
 }
