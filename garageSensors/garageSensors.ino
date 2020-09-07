@@ -18,7 +18,7 @@ char pass[] = SECRET_PASS;
 char twilio_bearer_token[] = TWILIO_BEARER_TOKEN;
 char twilio_account_sid[] = TWILIO_ACCOUNT_SID;
 
-char twilio_number[] = TWILIO_NUMBER;
+char twilio_number[] = "+12563339288";
 char my_number[] = MY_NUMBER;
 
 const size_t capacity = JSON_OBJECT_SIZE(2) + 65;
