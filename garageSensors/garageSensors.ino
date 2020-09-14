@@ -70,7 +70,7 @@ void updateGarageStatus(bool garageDoorClosedParam, bool garageLightOffParam)
   DynamicJsonDocument responseJson(capacity);
   Serial.println(F("updateGarageStatus"));
   HTTPClient http;
-  String url = "http://10.0.0.14:3000/garage";
+  String url = "http://10.0.0.38:3000/garage";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -105,7 +105,7 @@ void getGarageStatus()
   DynamicJsonDocument responseJson(capacity);
   Serial.println(F("getGarageStatus"));
   HTTPClient http;
-  String url = "http://10.0.0.14:3000/status";
+  String url = "http://10.0.0.38:3000/status";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
@@ -139,7 +139,7 @@ void sendAlert()
 {
   Serial.println("sendAlert Called");
   HTTPClient http;
-  String url = "http://10.0.0.14:3000/garageAlert";
+  String url = "http://10.0.0.38:3000/garageAlert";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
