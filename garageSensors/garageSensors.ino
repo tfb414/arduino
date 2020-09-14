@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 #include "secrets/motion_sensor_s3cr3ts.h"
 
+
 const int garageDoorPin = 21;
 const int lightSensorPin = 34;
 
@@ -29,7 +30,7 @@ bool garageLightOff;
 
 void connectToWifi()
 {
-  Serial.println("trying to connect");
+  Serial.println(F("trying to connect"));
   WiFi.begin(ssid, pass);
 }
 
@@ -67,7 +68,7 @@ void updateGarageStatus(bool garageDoorClosedParam, bool garageLightOffParam)
   String garageLightParam = BoolToString(garageLightOffParam);
   
   DynamicJsonDocument responseJson(capacity);
-  Serial.println("updateGarageStatus");
+  Serial.println(F("updateGarageStatus"));
   HTTPClient http;
   String url = "http://10.0.0.14:3000/garage";
 
@@ -80,9 +81,9 @@ void updateGarageStatus(bool garageDoorClosedParam, bool garageLightOffParam)
   if (httpResponseCode > 0)
   {
     String response = http.getString();
-    Serial.print("Response code: ");
+    Serial.print(F("Response code: "));
     Serial.println(httpResponseCode);
-    Serial.print("Response: ");
+    Serial.print(F("Response: "));
     Serial.println(response);
     
     DeserializationError error = deserializeJson(responseJson, response);
@@ -102,7 +103,7 @@ void getGarageStatus()
 {
 
   DynamicJsonDocument responseJson(capacity);
-  Serial.println("getGarageStatus");
+  Serial.println(F("getGarageStatus"));
   HTTPClient http;
   String url = "http://10.0.0.14:3000/status";
 
@@ -115,9 +116,9 @@ void getGarageStatus()
   if (httpResponseCode > 0)
   {
     String response = http.getString();
-    Serial.print("Response code: ");
+    Serial.print(F("Response code: "));
     Serial.println(httpResponseCode);
-    Serial.print("Response: ");
+    Serial.print(F("Response: "));
     Serial.println(response);
 
     DeserializationError error = deserializeJson(responseJson, response);
@@ -128,6 +129,32 @@ void getGarageStatus()
   }
     
     homeStatus = responseJson;
+
+  }
+  http.end();
+
+}
+
+void sendAlert()
+{
+  Serial.println("sendAlert Called");
+  HTTPClient http;
+  String url = "http://10.0.0.14:3000/garageAlert";
+
+  http.begin(url);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  int httpResponseCode = http.POST("");
+  Serial.println(httpResponseCode);
+
+  if (httpResponseCode > 0)
+  {
+    String response = http.getString();
+    Serial.print(F("Response code: "));
+    Serial.println(httpResponseCode);
+    Serial.print(F("Response: "));
+    Serial.println(response);
+
   }
   http.end();
 
@@ -142,9 +169,10 @@ void setup()
   while (WiFi.status() != WL_CONNECTED)
       {
         connectToWifi();
+        Serial.print(F("."));
         delay(3000);
       }
-  Serial.println("connected");
+  Serial.println(F("connected"));
 
   getGarageStatus();
   
@@ -162,20 +190,25 @@ void loop(){
     getGarageStatus();
   }
 
+  if(newGarageDoorClosed == true) {
+    threshold_to_alert = one_minute * 5;
+  }
+
   if(newGarageDoorClosed == false) {
     threshold_to_alert = threshold_to_alert - 1;
-    Serial.print("threshold countdown:     ");
+    Serial.print(F("threshold countdown: "));
     Serial.println(threshold_to_alert);
   }
   else {
     threshold_to_alert = one_minute * 10;
-    Serial.print("Threshold has been reset:      ");
+    Serial.print(F("Threshold has been reset: "));
     Serial.println(threshold_to_alert);  
   }
 
   if(threshold_to_alert <= 0) {
     threshold_to_alert = one_minute * 30;
     String message = "Garage door is open";
-    sendTextMessage(message, my_number, twilio_number);
+//    sendTextMessage(message, my_number, twilio_number);
+    sendAlert();
   }
 }
