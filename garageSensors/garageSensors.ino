@@ -8,10 +8,11 @@
 const int garageDoorPin = 21;
 const int lightSensorPin = 34;
 
-int one_minute = 800;
+int one_minute = 2000;
 
 int minute_threshold_to_alert = 1;
 int threshold_to_alert = one_minute * 5;
+int threshold_health_check = one_minute * 30;
 
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
@@ -105,7 +106,7 @@ void getGarageStatus()
   DynamicJsonDocument responseJson(capacity);
   Serial.println(F("getGarageStatus"));
   HTTPClient http;
-  String url = "http://10.0.0.38:3000/status";
+  String url = "http://10.0.0.38:3000/garageStatus";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
@@ -160,6 +161,31 @@ void sendAlert()
 
 }
 
+void updateHealthCheck()
+{
+  Serial.println("updateHealthCheck Called");
+  HTTPClient http;
+  String url = "http://10.0.0.38:3000/garageHealthCheck";
+
+  http.begin(url);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  int httpResponseCode = http.POST("");
+  Serial.println(httpResponseCode);
+
+  if (httpResponseCode > 0)
+  {
+    String response = http.getString();
+    Serial.print(F("Response code: "));
+    Serial.println(httpResponseCode);
+    Serial.print(F("Response: "));
+    Serial.println(response);
+
+  }
+  http.end();
+
+}
+
 
 void setup()
 {
@@ -179,6 +205,8 @@ void setup()
 }
  
 void loop(){
+  threshold_health_check -= 1;
+  
   int garageDoorSense = digitalRead(garageDoorPin);
   int lightSense = analogRead(lightSensorPin);
 
@@ -208,7 +236,13 @@ void loop(){
   if(threshold_to_alert <= 0) {
     threshold_to_alert = one_minute * 30;
     String message = "Garage door is open";
-//    sendTextMessage(message, my_number, twilio_number);
+    sendTextMessage(message, my_number, twilio_number);
     sendAlert();
+  }
+
+  if(threshold_health_check <= 0) {
+    Serial.print(F("HealthCheck sent: "));
+      threshold_health_check = one_minute * 30;
+      updateHealthCheck();
   }
 }
