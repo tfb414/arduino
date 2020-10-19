@@ -71,7 +71,7 @@ void updateGarageStatus(bool garageDoorClosedParam, bool garageLightOffParam)
   DynamicJsonDocument responseJson(capacity);
   Serial.println(F("updateGarageStatus"));
   HTTPClient http;
-  String url = "http://10.0.0.38:3000/garage";
+  String url = "http://10.0.0.100:3000/garage";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -106,7 +106,7 @@ void getGarageStatus()
   DynamicJsonDocument responseJson(capacity);
   Serial.println(F("getGarageStatus"));
   HTTPClient http;
-  String url = "http://10.0.0.38:3000/garageStatus";
+  String url = "http://10.0.0.100:3000/garageStatus";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
@@ -140,7 +140,7 @@ void sendAlert()
 {
   Serial.println("sendAlert Called");
   HTTPClient http;
-  String url = "http://10.0.0.38:3000/garageAlert";
+  String url = "http://10.0.0.100:3000/garageAlert";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -165,7 +165,7 @@ void updateHealthCheck()
 {
   Serial.println("updateHealthCheck Called");
   HTTPClient http;
-  String url = "http://10.0.0.38:3000/garageHealthCheck";
+  String url = "http://10.0.0.100:3000/garageHealthCheck";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -193,11 +193,11 @@ void setup()
   pinMode(garageDoorPin, INPUT);
 
   while (WiFi.status() != WL_CONNECTED)
-      {
+    {
         connectToWifi();
         Serial.print(F("."));
         delay(3000);
-      }
+    }
   Serial.println(F("connected"));
 
   getGarageStatus();
