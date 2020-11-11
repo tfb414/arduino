@@ -1,5 +1,10 @@
 #include "secrets/motion_sensor_s3cr3ts.h"
+#include <HTTPClient.h>
 #include <WiFi.h>
+#include <ArduinoJson.h>
+
+
+const size_t capacity = JSON_OBJECT_SIZE(2) + 65;
 
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
@@ -16,8 +21,11 @@ volatile byte pulseCount;
 float flowRate;
 unsigned int flowMilliLitres;
 unsigned long totalMilliLitres;
+unsigned long oldTotalMilliLitres;
+String tml;
 
 unsigned long oldTime;
+int countdown;
 
 void connectToWifi()
 {
@@ -25,43 +33,42 @@ void connectToWifi()
   WiFi.begin(ssid, pass);
 }
 
+void updateKegVolume(String kegVolume, int kegNumber)
+{  
+  DynamicJsonDocument responseJson(capacity);
+  Serial.println(F("updateKegVolume"));
+  HTTPClient http;
+  String url = "http://10.0.0.14:3000/kegVolume";
 
-void setup()
-{
-  Serial.begin(9600);
+  http.begin(url);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
- while (WiFi.status() != WL_CONNECTED)
+  int httpResponseCode = http.POST("kegVolume=" + kegVolume);
+  Serial.println(httpResponseCode);
+
+  if (httpResponseCode > 0)
   {
-      connectToWifi();
-      Serial.print(F("."));
-      delay(3000);
+    String response = http.getString();
+    Serial.print(F("Response code: "));
+    Serial.println(httpResponseCode);
+    Serial.print(F("Response: "));
+    Serial.println(response);
+    
+    DeserializationError error = deserializeJson(responseJson, response);
+    if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.c_str());
+    return;
+    }
+
   }
-  Serial.println(F("connected"));
+  http.end();
 
-  
-  pinMode(sensorPin, INPUT);
-  digitalWrite(sensorPin, HIGH);
-
-  pulseCount        = 0;
-  flowRate          = 0.0;
-  flowMilliLitres   = 0;
-  totalMilliLitres  = 0;
-  oldTime           = 0;
-
-  // The Hall-effect sensor is connected to pin 2 which uses interrupt 0.
-  // Configured to trigger on a FALLING state change (transition from HIGH
-  // state to LOW state)
-  attachInterrupt(sensorPin, pulseCounter, RISING);
 }
 
-/**
- * Main program loop
- */
-void loop()
+void getFlowRate()
 {
-
-   
-   if((millis() - oldTime) > 1000)    // Only process counters once per second
+    if((millis() - oldTime) > 1000)    // Only process counters once per second
   { 
     // Disable the interrupt while calculating flow rate and sending the value to
     // the host
@@ -101,8 +108,8 @@ void loop()
     Serial.print(totalMilliLitres);
     Serial.println("mL"); 
     Serial.print("\t");       // Print tab space
-  Serial.print(totalMilliLitres/1000);
-  Serial.print("L");
+    Serial.print(totalMilliLitres/1000);
+    Serial.print("L");
     
 
     // Reset the pulse counter so we can start incrementing again
@@ -110,11 +117,74 @@ void loop()
     
     // Enable the interrupt again now that we've finished sending output
     attachInterrupt(sensorInterrupt, pulseCounter, FALLING);
+
   }
 }
 
+
+void setup()
+{
+  Serial.begin(9600);
+
+ while (WiFi.status() != WL_CONNECTED)
+  {
+      connectToWifi();
+      Serial.print(F("."));
+      delay(3000);
+  }
+  Serial.println(F("connected"));
+
+  pinMode(sensorPin, INPUT);
+  digitalWrite(sensorPin, HIGH);
+
+  pulseCount        = 0;
+  flowRate          = 0.0;
+  flowMilliLitres   = 0;
+  totalMilliLitres  = 0;
+  oldTime           = 0;
+  countdown         = -1;
+
+  // The Hall-effect sensor is connected to pin 2 which uses interrupt 0.
+  // Configured to trigger on a FALLING state change (transition from HIGH
+  // state to LOW state)
+
+  // YOU MIGHT NEED TO CHANGE THIS BACK TO FALLING
+  attachInterrupt(sensorPin, pulseCounter, FALLING);
+}
+
+/**
+ * Main program loop
+ */
+void loop()
+{
+
+  oldTotalMilliLitres = totalMilliLitres;
+  getFlowRate();
+  Serial.println(countdown);
+  if(oldTotalMilliLitres != totalMilliLitres) {
+    countdown = 1000;
+    tml = String(totalMilliLitres);
+    Serial.println(tml);
+  }
+
+  if(countdown == 0) {
+        updateKegVolume(tml, 1);
+        Serial.println("Countdown done");
+        Serial.println("TML" + tml);
+    }
+
+  if(countdown > -1) 
+  {
+    
+    countdown --;
+  }
+  
+  
+  
+}
+
 /*
-Insterrupt Service Routine
+Interrupt Service Routine
  */
 void pulseCounter()
 {

@@ -30,7 +30,6 @@ void getTemp()
 }
 
 void setup() {
-  // Initialize a serial connection for reporting values to the host
   Serial.begin(9600);
   
   //initialize the dht / temperature sensor
