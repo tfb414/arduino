@@ -36,9 +36,9 @@ void connectToWifi()
 void updateKegVolume(String kegVolume, int kegNumber)
 {  
   DynamicJsonDocument responseJson(capacity);
-  Serial.println(F("updateKegVolume"));
+//  Serial.println(F("updateKegVolume"));
   HTTPClient http;
-  String url = "http://10.0.0.14:3000/kegVolume";
+  String url = "http://10.0.0.100:3000/kegVolume";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -49,10 +49,10 @@ void updateKegVolume(String kegVolume, int kegNumber)
   if (httpResponseCode > 0)
   {
     String response = http.getString();
-    Serial.print(F("Response code: "));
-    Serial.println(httpResponseCode);
-    Serial.print(F("Response: "));
-    Serial.println(response);
+//    Serial.print(F("Response code: "));
+//    Serial.println(httpResponseCode);
+//    Serial.print(F("Response: "));
+//    Serial.println(response);
     
     DeserializationError error = deserializeJson(responseJson, response);
     if (error) {
@@ -98,18 +98,18 @@ void getFlowRate()
     unsigned int frac;
     
     // Print the flow rate for this second in litres / minute
-    Serial.print("Flow rate: ");
-    Serial.print(int(flowRate));  // Print the integer part of the variable
-    Serial.print("L/min");
-    Serial.print("\t");       // Print tab space
+//    Serial.print("Flow rate: ");
+//    Serial.print(int(flowRate));  // Print the integer part of the variable
+//    Serial.print("L/min");
+//    Serial.print("\t");       // Print tab space
 
     // Print the cumulative total of litres flowed since starting
-    Serial.print("Output Liquid Quantity: ");        
-    Serial.print(totalMilliLitres);
-    Serial.println("mL"); 
-    Serial.print("\t");       // Print tab space
-    Serial.print(totalMilliLitres/1000);
-    Serial.print("L");
+//    Serial.print("Output Liquid Quantity: ");        
+//    Serial.print(totalMilliLitres);
+//    Serial.println("mL"); 
+//    Serial.print("\t");       // Print tab space
+//    Serial.print(totalMilliLitres/1000);
+//    Serial.print("L");
     
 
     // Reset the pulse counter so we can start incrementing again
@@ -132,7 +132,7 @@ void setup()
       Serial.print(F("."));
       delay(3000);
   }
-  Serial.println(F("connected"));
+//  Serial.println(F("connected"));
 
   pinMode(sensorPin, INPUT);
   digitalWrite(sensorPin, HIGH);
@@ -164,13 +164,13 @@ void loop()
   if(oldTotalMilliLitres != totalMilliLitres) {
     countdown = 1000;
     tml = String(totalMilliLitres);
-    Serial.println(tml);
+//    Serial.println(tml);
   }
 
   if(countdown == 0) {
         updateKegVolume(tml, 1);
-        Serial.println("Countdown done");
-        Serial.println("TML" + tml);
+//        Serial.println("Countdown done");
+//        Serial.println("TML" + tml);
     }
 
   if(countdown > -1) 
