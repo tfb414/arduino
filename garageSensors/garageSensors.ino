@@ -190,7 +190,7 @@ void updateHealthCheck()
 void setup()
 {
   Serial.begin(9600);
-  pinMode(garageDoorPin, INPUT);
+  pinMode(garageDoorPin, INPUT_PULLUP);
 
   while (WiFi.status() != WL_CONNECTED)
     {
@@ -207,7 +207,8 @@ void setup()
 void loop(){
   threshold_health_check -= 1;
   //For some reason if I don't print this the value goes to 1 instead of subracting 1. I know it's crazy
-  Serial.println(threshold_health_check);
+//  Serial.println(threshold_health_check);
+//  Serial.println(threshold_to_alert);
   
   int garageDoorSense = digitalRead(garageDoorPin);
   int lightSense = analogRead(lightSensorPin);
@@ -219,21 +220,22 @@ void loop(){
     updateGarageStatus(newGarageDoorClosed, newGarageLightOff);
     getGarageStatus();
   }
-
+//  Serial.println("garageDoorClosed");
+//  Serial.println(newGarageDoorClosed);
   if(newGarageDoorClosed == false) {
     threshold_to_alert = threshold_to_alert - 1;
-//    Serial.print(F("threshold countdown: "));
-//    Serial.println(threshold_to_alert);
+    Serial.print(F("threshold countdown: "));
+    Serial.println(threshold_to_alert);
   }
   if(newGarageDoorClosed == true) {
     threshold_to_alert = one_minute * 5;
-//    Serial.println(threshold_to_alert);
+    Serial.println(threshold_to_alert);
   }
-  else {
-    threshold_to_alert = one_minute * 10;
-    Serial.print(F("Threshold has been reset: "));
-    Serial.println(threshold_to_alert);  
-  }
+//  else {
+//    threshold_to_alert = one_minute * 10;
+//    Serial.print(F("Threshold has been reset: "));
+//    Serial.println(threshold_to_alert);  
+//  }
 
   if(threshold_to_alert <= 0) {
     threshold_to_alert = one_minute * 30;
