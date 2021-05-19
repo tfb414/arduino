@@ -206,6 +206,8 @@ void setup()
  
 void loop(){
   threshold_health_check -= 1;
+  //For some reason if I don't print this the value goes to 1 instead of subracting 1. I know it's crazy
+  Serial.println(threshold_health_check);
   
   int garageDoorSense = digitalRead(garageDoorPin);
   int lightSense = analogRead(lightSensorPin);
@@ -218,14 +220,14 @@ void loop(){
     getGarageStatus();
   }
 
-  if(newGarageDoorClosed == true) {
-    threshold_to_alert = one_minute * 5;
-  }
-
   if(newGarageDoorClosed == false) {
     threshold_to_alert = threshold_to_alert - 1;
-    Serial.print(F("threshold countdown: "));
-    Serial.println(threshold_to_alert);
+//    Serial.print(F("threshold countdown: "));
+//    Serial.println(threshold_to_alert);
+  }
+  if(newGarageDoorClosed == true) {
+    threshold_to_alert = one_minute * 5;
+//    Serial.println(threshold_to_alert);
   }
   else {
     threshold_to_alert = one_minute * 10;
