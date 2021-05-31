@@ -25,6 +25,8 @@ char my_number[] = MY_NUMBER;
 
 const size_t capacity = JSON_OBJECT_SIZE(2) + 65;
 DynamicJsonDocument homeStatus(capacity);
+String hostIp;
+
 
 bool garageDoorClosed;
 bool garageLightOff;
@@ -71,7 +73,7 @@ void updateGarageStatus(bool garageDoorClosedParam, bool garageLightOffParam)
   DynamicJsonDocument responseJson(capacity);
   Serial.println(F("updateGarageStatus"));
   HTTPClient http;
-  String url = "http://10.0.0.35:3000/garage";
+  String url = "http://" + hostIp + ":3000/garage";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -106,7 +108,7 @@ void getGarageStatus()
   DynamicJsonDocument responseJson(capacity);
   Serial.println(F("getGarageStatus"));
   HTTPClient http;
-  String url = "http://10.0.0.35:3000/garageStatus";
+  String url = "http://" + hostIp + ":3000/garageStatus";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
@@ -140,7 +142,7 @@ void sendAlert()
 {
   Serial.println("sendAlert Called");
   HTTPClient http;
-  String url = "http://10.0.0.35:3000/garageAlert";
+  String url = "http://" + hostIp + ":3000/garageAlert";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -165,7 +167,7 @@ void updateHealthCheck()
 {
   Serial.println("updateHealthCheck Called");
   HTTPClient http;
-  String url = "http://10.0.0.35:3000/garageHealthCheck";
+  String url = "http://" + hostIp + ":3000/garageHealthCheck";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -186,6 +188,44 @@ void updateHealthCheck()
 
 }
 
+void getIpAddress()
+{
+
+  DynamicJsonDocument responseJson(capacity);
+  Serial.println(F("getIpAddress"));
+  HTTPClient http;
+  String url = "https://raw.githubusercontent.com/tfb414/arduino/master/ip-local.json";
+
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+
+  int httpResponseCode = http.GET();
+  Serial.println(httpResponseCode);
+
+  if (httpResponseCode > 0)
+  {
+    String response = http.getString();
+    DynamicJsonDocument ipAddresses(capacity);
+    Serial.print(F("Response code: "));
+    Serial.println(httpResponseCode);
+    Serial.print(F("Response: "));
+    deserializeJson(ipAddresses, response);
+    Serial.println(ipAddresses["homeAssistantStatus"].as<String>());
+
+//I'm commenting this out because it's not able to deserialize probably because of the above code
+//    DeserializationError error = deserializeJson(responseJson, response);
+//    if (error) {
+//    Serial.print(F("deserializeJson() failed: "));
+//    Serial.println(error.c_str());
+//    return;
+//  }
+    
+    hostIp = ipAddresses["homeAssistantStatus"].as<String>();
+
+  }
+  http.end();
+
+}
 
 void setup()
 {
@@ -199,7 +239,8 @@ void setup()
         delay(3000);
     }
   Serial.println(F("connected"));
-
+  
+  getIpAddress();
   getGarageStatus();
   
 }
