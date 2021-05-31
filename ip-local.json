@@ -1,3 +1,5 @@
 {
-  "derp": "test"
+	"homeAssistantStatus": "10.0.0.200",
+	"brady-bunch": "10.0.0.200",
+	"octopi": "10.0.0.10"
 }
